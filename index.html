@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1769e0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Student Check">
+  <title>Student Check</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <style>
+    :root { --blue:#1769e0; --ink:#182230; --muted:#64748b; --line:#e2e8f0; --bg:#f4f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg); }
+    button,input,select { font:inherit; }
+    button { cursor:pointer; }
+    .wrap { width:min(100%,720px); margin:auto; padding:18px 14px 40px; }
+    .brand { display:flex; align-items:center; gap:10px; margin:8px 0 18px; }
+    .logo { width:44px;height:44px;border-radius:14px;background:var(--blue);color:white;display:grid;place-items:center;font-weight:800;font-size:20px; }
+    h1 { font-size:22px; margin:0; } .sub { color:var(--muted); font-size:13px; margin-top:3px; }
+    .card { background:white; border:1px solid var(--line); border-radius:18px; padding:16px; margin:12px 0; box-shadow:0 4px 18px #17255408; }
+    h2 { font-size:17px; margin:0 0 12px; }
+    label { display:block; font-size:13px; color:#475569; margin:10px 0 6px; }
+    input,select { width:100%; padding:12px; border:1px solid #cbd5e1; border-radius:11px; background:white; color:var(--ink); }
+    button { border:0; border-radius:11px; padding:11px 13px; font-weight:650; }
+    .primary { background:var(--blue); color:white; width:100%; margin-top:12px; }
+    .secondary { background:#eaf2ff; color:#1454b8; }
+    .danger { background:#fff0f0; color:#b42318; }
+    .muted { color:var(--muted); font-size:13px; line-height:1.5; }
+    .hidden { display:none !important; }
+    .topline { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .statgrid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .stat { padding:10px 7px; border-radius:12px; background:#f8fafc; text-align:center; border:1px solid var(--line); }
+    .stat strong { display:block; font-size:21px; } .stat span { font-size:12px; color:var(--muted); }
+    .student { border:1px solid var(--line); border-radius:14px; padding:12px; margin:9px 0; }
+    .studentname { font-weight:700; margin-bottom:9px; overflow-wrap:anywhere; }
+    .statuses { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+    .status { padding:9px 2px; font-size:12px; background:#f1f5f9; color:#334155; border:1px solid transparent; }
+    .status.active { border-color:var(--blue); background:#eaf2ff; color:#1454b8; box-shadow:inset 0 0 0 1px var(--blue); }
+    .studenttools { display:flex; justify-content:flex-end; margin-top:8px; }
+    .small { font-size:12px; padding:7px 9px; }
+    .message { margin-top:10px; font-size:13px; color:#b42318; }
+    .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:22px; }
+    @media (max-width:380px) { .statgrid { grid-template-columns:repeat(2,1fr); } .statuses { gap:4px; } .status { font-size:11px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="brand">
+      <div class="logo">SC</div>
+      <div><h1>Student Check</h1><div class="sub">ระบบเช็กชื่อเข้าเรียนสำหรับครู</div></div>
+    </header>
+
+    <section id="loginView" class="card">
+      <h2>เข้าสู่ระบบครู</h2>
+      <p class="muted">ต้นแบบนี้เก็บข้อมูลไว้ในเบราว์เซอร์ของ iPhone เครื่องนี้เท่านั้น</p>
+      <form id="loginForm">
+        <label for="username">ชื่อผู้ใช้</label>
+        <input id="username" autocomplete="username" required value="teacher">
+        <label for="password">รหัสผ่าน</label>
+        <input id="password" type="password" autocomplete="current-password" required placeholder="กรอกรหัสผ่าน">
+        <button class="primary" type="submit">เข้าสู่ระบบ</button>
+        <div id="loginMessage" class="message" role="status"></div>
+      </form>
+    </section>
+
+    <section id="appView" class="hidden">
+      <div class="card topline">
+        <div><strong>ห้องเรียนของฉัน</strong><div class="muted">ครูผู้ใช้งานคนเดียว</div></div>
+        <button id="logoutBtn" class="secondary">ออกจากระบบ</button>
+      </div>
+
+      <section class="card">
+        <h2>เลือกวันที่เช็กชื่อ</h2>
+        <input id="attendanceDate" type="date">
+        <div class="statgrid" style="margin-top:12px">
+          <div class="stat"><strong id="totalCount">0</strong><span>นักเรียนทั้งหมด</span></div>
+          <div class="stat"><strong id="presentCount">0</strong><span>มาเรียน</span></div>
+          <div class="stat"><strong id="absentCount">0</strong><span>ขาด</span></div>
+          <div class="stat"><strong id="otherCount">0</strong><span>สาย/ลา</span></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>เพิ่มนักเรียน</h2>
+        <form id="addStudentForm">
+          <label for="studentName">ชื่อ-นามสกุลนักเรียน</label>
+          <input id="studentName" maxlength="100" placeholder="เช่น เด็กหญิงใจดี ตั้งใจเรียน" required>
+          <button class="primary" type="submit">+ เพิ่มรายชื่อ</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="topline"><h2 style="margin:0">รายชื่อและสถานะ</h2><span id="studentCountLabel" class="muted">0 คน</span></div>
+        <p class="muted">เลือกสถานะของนักเรียนแต่ละคน ระบบจะบันทึกในเครื่องโดยอัตโนมัติ</p>
+        <div id="studentList"></div>
+        <div id="emptyMessage" class="muted">ยังไม่มีรายชื่อนักเรียน ให้เพิ่มรายชื่อด้านบน</div>
+      </section>
+
+      <section class="card">
+        <h2>สำรองข้อมูล</h2>
+        <p class="muted">ดาวน์โหลดไฟล์สำรองเป็น JSON เก็บไว้ในแอปไฟล์ (Files) ของ iPhone เพื่อป้องกันข้อมูลสูญหาย</p>
+        <button id="exportBtn" class="secondary" style="width:100%">ส่งออกข้อมูลสำรอง</button>
+        <p id="exportMessage" class="muted"></p>
+      </section>
+      <div class="footer">Student Check PWA · รุ่นทดลองสำหรับใช้งานในเครื่องเดียว</div>
+    </section>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+
+  // เปลี่ยนชื่อผู้ใช้และรหัสผ่านตรงนี้ก่อนใช้งาน
+  // หมายเหตุ: นี่เป็นเพียงการล็อกหน้าจอเบื้องต้น ไม่ใช่ระบบความปลอดภัยระดับสูง
+  const TEACHER_USERNAME = "teacher";
+  const TEACHER_PASSWORD = "1234";
+
+  const DATA_KEY = "studentCheckData_v1";
+  const SESSION_KEY = "studentCheckSession_v1";
+  const $ = (id) => document.getElementById(id);
+  const statuses = [
+    { key: "present", label: "มาเรียน" },
+    { key: "absent", label: "ขาด" },
+    { key: "late", label: "สาย" },
+    { key: "leave", label: "ลา" }
+  ];
+
+  let data = loadData();
+
+  function loadData() {
+    try {
+      const saved = localStorage.getItem(DATA_KEY);
+      if (!saved) return { students: [], attendance: {} };
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed.students) || typeof parsed.attendance !== "object") {
+        return { students: [], attendance: {} };
+      }
+      return parsed;
+    } catch {
+      return { students: [], attendance: {} };
+    }
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(DATA_KEY, JSON.stringify(data));
+      return true;
+    } catch {
+      alert("บันทึกไม่สำเร็จ พื้นที่จัดเก็บอาจเต็ม กรุณาส่งออกข้อมูลสำรอง");
+      return false;
+    }
+  }
+
+  function todayLocal() {
+    const d = new Date();
+    const offset = d.getTimezoneOffset();
+    return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 10);
+  }
+
+  function currentDate() {
+    return $("attendanceDate").value || todayLocal();
+  }
+
+  function attendanceForDate(date) {
+    if (!data.attendance[date]) data.attendance[date] = {};
+    return data.attendance[date];
+  }
+
+  function showApp(loggedIn) {
+    $("loginView").classList.toggle("hidden", loggedIn);
+    $("appView").classList.toggle("hidden", !loggedIn);
+    if (loggedIn) render();
+  }
+
+  $("loginForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const username = $("username").value.trim();
+    const password = $("password").value;
+    if (username === TEACHER_USERNAME && password === TEACHER_PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, "yes");
+      $("loginMessage").textContent = "";
+      showApp(true);
+    } else {
+      $("loginMessage").textContent = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    showApp(false);
+    $("password").value = "";
+  });
+
+  $("attendanceDate").value = todayLocal();
+  $("attendanceDate").addEventListener("change", render);
+
+  $("addStudentForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const name = $("studentName").value.trim();
+    if (!name) return;
+    data.students.push({ id: (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)), name });
+    saveData();
+    $("studentName").value = "";
+    render();
+  });
+
+  function setStatus(studentId, status) {
+    attendanceForDate(currentDate())[studentId] = status;
+    saveData();
+    render();
+  }
+
+  function deleteStudent(studentId) {
+    const student = data.students.find(s => s.id === studentId);
+    if (!student || !confirm(`ลบรายชื่อ "${student.name}" ใช่หรือไม่?`)) return;
+    data.students = data.students.filter(s => s.id !== studentId);
+    Object.keys(data.attendance).forEach(date => {
+      if (data.attendance[date]) delete data.attendance[date][studentId];
+    });
+    saveData();
+    render();
+  }
+
+  function render() {
+    const dateData = attendanceForDate(currentDate());
+    $("totalCount").textContent = data.students.length;
+    $("presentCount").textContent = data.students.filter(s => dateData[s.id] === "present").length;
+    $("absentCount").textContent = data.students.filter(s => dateData[s.id] === "absent").length;
+    $("otherCount").textContent = data.students.filter(s => ["late", "leave"].includes(dateData[s.id])).length;
+    $("studentCountLabel").textContent = `${data.students.length} คน`;
+    $("studentList").replaceChildren();
+    $("emptyMessage").classList.toggle("hidden", data.students.length > 0);
+
+    data.students.forEach(student => {
+      const card = document.createElement("div");
+      card.className = "student";
+      const name = document.createElement("div");
+      name.className = "studentname";
+      name.textContent = student.name;
+      card.appendChild(name);
+
+      const buttons = document.createElement("div");
+      buttons.className = "statuses";
+      statuses.forEach(status => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "status" + (dateData[student.id] === status.key ? " active" : "");
+        button.textContent = status.label;
+        button.setAttribute("aria-pressed", dateData[student.id] === status.key ? "true" : "false");
+        button.addEventListener("click", () => setStatus(student.id, status.key));
+        buttons.appendChild(button);
+      });
+      card.appendChild(buttons);
+
+      const tools = document.createElement("div");
+      tools.className = "studenttools";
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "danger small";
+      del.textContent = "ลบรายชื่อ";
+      del.addEventListener("click", () => deleteStudent(student.id));
+      tools.appendChild(del);
+      card.appendChild(tools);
+      $("studentList").appendChild(card);
+    });
+  }
+
+  $("exportBtn").addEventListener("click", () => {
+    const backup = {
+      app: "Student Check",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `student-check-backup-${todayLocal()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    $("exportMessage").textContent = "สั่งส่งออกแล้ว หากไม่เห็นไฟล์ ให้ตรวจสอบแอปไฟล์ (Files) > ดาวน์โหลด (Downloads)";
+  });
+
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  showApp(sessionStorage.getItem(SESSION_KEY) === "yes");
+})();
+</script>
+</body>
+</html>
